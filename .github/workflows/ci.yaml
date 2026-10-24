@@ -33,6 +33,8 @@ jobs:
         run: make lint
       - name: Tooling, distributed demos, and failure cases
         run: make test
+      - name: Upstream recipe downloads and failure cases
+        run: make test-recipe
       - name: Scale workers from one to three
         run: make test-scale
       - name: Recreate containers and verify persisted history

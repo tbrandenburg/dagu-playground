@@ -23,6 +23,7 @@ Keep a small, understandable lab for distributed Dagu execution. Prefer an inspe
 - `scripts/manage.py`: CLI argument validation and startup readiness.
 - `scripts/demo.py`: positive scenarios and `.artifacts/demo.json`.
 - `scripts/verify.py`: negative, scaling, and persisted-history checks.
+- `scripts/recipe.py`: checksum-verified refresh and normal deployment of an upstream recipe; generated YAML stays ignored.
 - `tests/`: standard-library unittest tests using actual loopback HTTP.
 - `docs/`: architecture and reproducible verification notes.
 
@@ -51,12 +52,15 @@ Current image-specific rules: omit root `name`, use `type: graph`, and give step
 
 ```sh
 make check
+make test-recipe
 make test-scale
 make test-lifecycle
 git diff --check
 ```
 
 `make lint` needs `uv` and Node/npm. The playground itself needs Docker Compose, Make, and Python only. CI uses Python 3.12 and real Docker.
+
+Recipes are plain DAG files, not native Action packages. Keep upstream steps out of git: refresh the pinned source before `make recipe`, verify its checksum, validate the generated spec, then atomically publish it under `dags/`. Never silently run an old deployment after refresh failure. Review the upstream diff before updating the source revision and checksum; see `docs/recipes.md`. Avoid worker-local child DAG loading or nested Dagu CLI processes for recipe deployment.
 
 Acceptance checks must assert observable behavior, not just exit zero. Check workflow statuses, worker IDs, actual logs, exact file contents, workdir selection, peer-filesystem absence, overlapping branch execution, and exact retry count. Keep the intentionally failed `expected-failure` run; it tests blocked dependencies, not a broken suite. Never mock Docker or Dagu in end-to-end checks.
 

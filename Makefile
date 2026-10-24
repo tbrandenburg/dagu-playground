@@ -5,7 +5,7 @@ WORKERS ?= 2
 PYTHON ?= python3
 export PORT
 
-.PHONY: help up spawn-up down spawn-down scale ready demo validate test test-unit test-scale test-lifecycle lint check logs status reset
+.PHONY: help up spawn-up down spawn-down scale ready demo recipe test-recipe validate test test-unit test-scale test-lifecycle lint check logs status reset
 
 help: ## Show the playground commands
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -29,7 +29,13 @@ ready: ## Wait for worker registration
 demo: up validate ## Run and verify distributed, filesystem, parallel, retry, and local demos
 	$(PYTHON) -m scripts.demo
 
-validate: ## Validate six workflow definitions using the actual Dagu binary
+recipe: up ## Refresh upstream recipe, validate, deploy, and run it on a worker
+	$(PYTHON) -m scripts.recipe
+
+test-recipe: up ## Check recipe refresh and real HTTP failure/retry behavior
+	$(PYTHON) -m scripts.recipe --test
+
+validate: ## Validate workflow definitions using the actual Dagu binary
 	docker compose exec -T dagu sh -c 'for dag in /var/lib/dagu/dags/*.yaml; do dagu validate "$$dag" || exit; done'
 
 test-unit: ## Run dependency-free tooling regression tests

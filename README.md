@@ -42,6 +42,16 @@ Open **[localhost:8100](http://localhost:8100)**. No signup or credentials are r
 
 **A DAG run stays on one worker.** Parallel steps within that run share its filesystem. Different runs can land on different workers; a later run must not assume a previous worker's files exist.
 
+### Try an official recipe without maintaining a copy
+
+```sh
+make recipe
+```
+
+This downloads a reviewed, checksum-pinned version of Dagu's [HTTP-health recipe](https://dagu.sh/recipes/http-health-slack), prepares an on-demand health-only definition, and deploys it as a normal **recipe-health-check** workflow. Its upstream HTTP check and retry policy stay unchanged; Slack credentials and the schedule are omitted. The generated YAML is ignored by git, not vendored.
+
+Each command invocation refreshes before running; a download, checksum, or validation failure stops execution. Dashboard starts use the last prepared definition. See [recipe deployment, update policy, and research findings](/docs/recipes.md).
+
 ## The shape of the lab
 
 ```text
@@ -60,21 +70,23 @@ Workers connect outbound to `dagu:50055` and register automatically. Definitions
 
 ## Everyday commands
 
-| Command                         | Effect                                                          |
-| ------------------------------- | --------------------------------------------------------------- |
-| `make up` / `make spawn-up`     | Start one server and two workers; wait for registration         |
-| `make demo`                     | Start the default topology and run the positive acceptance demo |
-| `make down` / `make spawn-down` | Remove containers and network; retain server history            |
-| `make scale WORKERS=3`          | Change the running worker count, from 1 to 5                    |
-| `make status`                   | Show containers and check registered workers                    |
-| `make logs`                     | Follow server and worker logs                                   |
-| `make validate`                 | Validate the six definitions with the pinned Dagu binary        |
-| `make test`                     | Tooling tests, demo, and intentional failure checks             |
-| `make test-scale`               | Execute jobs with 1 and 3 workers; restore the initial count    |
-| `make test-lifecycle`           | Recreate containers; verify retained run records and logs       |
-| `make lint`                     | Ruff and Prettier checks; requires `uv` and Node/npm            |
-| `make check`                    | Formatting, lint, and `make test`                               |
-| `make reset CONFIRM=reset`      | **Delete server history** and remove this stack                 |
+| Command                         | Effect                                                                 |
+| ------------------------------- | ---------------------------------------------------------------------- |
+| `make up` / `make spawn-up`     | Start one server and two workers; wait for registration                |
+| `make demo`                     | Start the default topology and run the positive acceptance demo        |
+| `make recipe`                   | Refresh, validate, deploy, and run the official HTTP-health recipe     |
+| `make test-recipe`              | Check refresh, stale replacement, invalid deployment, and HTTP retries |
+| `make down` / `make spawn-down` | Remove containers and network; retain server history                   |
+| `make scale WORKERS=3`          | Change the running worker count, from 1 to 5                           |
+| `make status`                   | Show containers and check registered workers                           |
+| `make logs`                     | Follow server and worker logs                                          |
+| `make validate`                 | Validate available definitions with the pinned Dagu binary             |
+| `make test`                     | Tooling tests, demo, and intentional failure checks                    |
+| `make test-scale`               | Execute jobs with 1 and 3 workers; restore the initial count           |
+| `make test-lifecycle`           | Recreate containers; verify retained run records and logs              |
+| `make lint`                     | Ruff and Prettier checks; requires `uv` and Node/npm                   |
+| `make check`                    | Formatting, lint, and `make test`                                      |
+| `make reset CONFIRM=reset`      | **Delete server history** and remove this stack                        |
 
 Port 8100 is the default, not a reserved port. Startup rejects an occupied port rather than terminating another service:
 
@@ -115,10 +127,12 @@ scripts/
   client.py               Bounded REST and Docker helpers
   manage.py               Validated startup, scaling, readiness
   demo.py                 Positive acceptance scenarios and evidence report
+  recipe.py               Refresh and deploy one upstream-referenced recipe
   verify.py               Failure, scaling, and lifecycle scenarios
 tests/                    Real loopback HTTP tests for the tooling
 docs/
   architecture.md         Design decisions and trade-offs
+  recipes.md              Official recipe deployment and reviewed updates
   verification.md         Reproduction and screenshot provenance
   images/                 Real dashboard screenshots
 .github/                  Docker acceptance CI and dependency updates
@@ -130,6 +144,7 @@ LICENSE                   MIT license for this repository
 
 ```sh
 make check
+make test-recipe
 make test-scale
 make test-lifecycle
 ```
@@ -159,4 +174,4 @@ There is deliberately no application framework or Python dependency lockfile: th
 
 ## License
 
-This repository's examples, tooling, and documentation are [MIT licensed](/LICENSE). Dagu itself is a separate upstream project licensed under [GPL-3.0](https://github.com/dagucloud/dagu/blob/v2.22.2/LICENSE.md); the MIT license here does not relicense the Dagu image or upstream software. This is an independent playground, not an official Dagu project.
+This repository's examples, tooling, and documentation are [MIT licensed](/LICENSE). Downloaded upstream recipes retain their [Apache-2.0 license](https://github.com/dagucloud/recipes/blob/main/LICENSE). Dagu itself is a separate upstream project licensed under [GPL-3.0](https://github.com/dagucloud/dagu/blob/v2.22.2/LICENSE.md); the MIT license here does not relicense the Dagu image or upstream software. This is an independent playground, not an official Dagu project.

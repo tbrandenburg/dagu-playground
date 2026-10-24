@@ -1,0 +1,51 @@
+description: Create, transform, copy, move, and verify files in independent worker directories.
+type: graph
+worker_selector:
+  pool: playground
+env:
+  - WORKSPACE: /tmp/dagu-playground/${context.run.id}
+steps:
+  - id: prepare
+    action: file.mkdir
+    with:
+      path: ${env.WORKSPACE}/input
+  - id: prepare_output
+    depends: [prepare]
+    action: file.mkdir
+    with:
+      path: ${env.WORKSPACE}/output
+  - id: write
+    depends: [prepare_output]
+    action: file.write
+    with:
+      path: ${env.WORKSPACE}/input/message.txt
+      content: "hello from an isolated worker\n"
+  - id: transform
+    depends: [write]
+    working_dir: ${env.WORKSPACE}/input
+    run: |
+      set -eu
+      printf 'worker=%s cwd=%s\n' "$(hostname)" "$PWD"
+      tr '[:lower:]' '[:upper:]' < message.txt > ../output/upper.txt
+  - id: copy
+    depends: [transform]
+    action: file.copy
+    with:
+      source: ${env.WORKSPACE}/output/upper.txt
+      destination: ${env.WORKSPACE}/output/copy.txt
+  - id: move
+    depends: [copy]
+    action: file.move
+    with:
+      source: ${env.WORKSPACE}/output/copy.txt
+      destination: ${env.WORKSPACE}/output/final.txt
+  - id: verify
+    depends: [move]
+    working_dir: ${env.WORKSPACE}/output
+    run: |
+      set -eu
+      test ! -e copy.txt
+      cmp upper.txt final.txt
+      test "$(cat final.txt)" = 'HELLO FROM AN ISOLATED WORKER'
+      printf 'worker=%s cwd=%s\n' "$(hostname)" "$PWD"
+      cat final.txt

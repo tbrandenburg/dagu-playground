@@ -1,0 +1,10 @@
+description: Explicitly override distributed execution and run on the server.
+type: graph
+worker_selector: local
+steps:
+  - id: identify_server
+    run: |
+      set -eu
+      printf 'server=%s\n' "$(hostname)"
+      test -f /var/lib/dagu/dags/local-server.yaml
+      printf 'Server-only DAG mount is present\n'

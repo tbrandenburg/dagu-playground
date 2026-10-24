@@ -1,0 +1,44 @@
+name: dagu-playground
+
+x-dagu: &dagu
+  image: ghcr.io/dagucloud/dagu:2.22.2@sha256:35897f82f61375365a27914b63af08a7dfcf56320c7bc9df813a0bd966b953f1
+  restart: unless-stopped
+
+services:
+  dagu:
+    <<: *dagu
+    command: [dagu, start-all]
+    ports:
+      - "127.0.0.1:${PORT:-8100}:8080"
+    environment:
+      DAGU_HOST: 0.0.0.0
+      DAGU_COORDINATOR_HOST: 0.0.0.0
+      DAGU_COORDINATOR_ADVERTISE: dagu
+      DAGU_DEFAULT_EXECUTION_MODE: distributed
+      DAGU_PEER_INSECURE: "true"
+      DAGU_AUTH_MODE: none
+      DAGU_WIKI_DIR: /var/lib/dagu/wiki
+    volumes:
+      - dagu-data:/var/lib/dagu
+      - ./dags:/var/lib/dagu/dags:ro
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, http://localhost:8080/api/v1/health]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
+  worker:
+    <<: *dagu
+    command: [dagu, worker]
+    environment:
+      DAGU_WORKER_COORDINATORS: dagu:50055
+      DAGU_WORKER_LABELS: pool=playground
+      DAGU_WORKER_MAX_ACTIVE_RUNS: "2"
+      DAGU_PEER_INSECURE: "true"
+    depends_on:
+      dagu:
+        condition: service_healthy
+
+volumes:
+  dagu-data:

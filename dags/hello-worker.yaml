@@ -1,0 +1,16 @@
+description: Identify the worker and hold its slot briefly to demonstrate distribution.
+type: graph
+worker_selector:
+  pool: playground
+params:
+  - HOLD: "3"
+steps:
+  - id: identify_worker
+    run: hostname
+    output: WORKER
+  - id: execute
+    depends: [identify_worker]
+    run: |
+      set -eu
+      printf 'Hello from worker %s; run=%s\n' "$WORKER" "$DAG_RUN_ID"
+      sleep "$HOLD"

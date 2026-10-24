@@ -1,0 +1,25 @@
+description: A deliberately transient failure succeeds on its second attempt.
+type: graph
+worker_selector:
+  pool: playground
+env:
+  - WORKSPACE: /tmp/dagu-playground/${context.run.id}
+steps:
+  - id: prepare
+    action: file.mkdir
+    with:
+      path: ${env.WORKSPACE}
+  - id: flaky_operation
+    depends: [prepare]
+    working_dir: ${env.WORKSPACE}
+    retry_policy:
+      limit: 1
+      interval_sec: 1
+    run: |
+      set -eu
+      if test ! -e attempted; then
+        touch attempted
+        printf 'Intentional transient failure: retry me\n' >&2
+        exit 1
+      fi
+      printf 'Recovered on retry on worker %s\n' "$(hostname)"

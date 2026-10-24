@@ -1,0 +1,12 @@
+description: Negative test; a missing file fails the run and blocks the dependent step.
+type: graph
+worker_selector:
+  pool: playground
+steps:
+  - id: missing_file
+    action: file.read
+    with:
+      path: /tmp/dagu-playground/${context.run.id}/does-not-exist.txt
+  - id: must_not_run
+    depends: [missing_file]
+    run: echo 'ERROR - this step must remain blocked'

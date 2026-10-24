@@ -1,0 +1,41 @@
+description: Two parallel branches use different working directories on the same worker.
+type: graph
+worker_selector:
+  pool: playground
+env:
+  - WORKSPACE: /tmp/dagu-playground/${context.run.id}
+max_active_steps: 2
+steps:
+  - id: prepare_alpha
+    action: file.mkdir
+    with:
+      path: ${env.WORKSPACE}/alpha
+  - id: prepare_beta
+    action: file.mkdir
+    with:
+      path: ${env.WORKSPACE}/beta
+  - id: alpha
+    depends: [prepare_alpha]
+    working_dir: ${env.WORKSPACE}/alpha
+    run: |
+      set -eu
+      printf 'alpha\n' > result.txt
+      printf 'worker=%s cwd=%s\n' "$(hostname)" "$PWD"
+      sleep 2
+  - id: beta
+    depends: [prepare_beta]
+    working_dir: ${env.WORKSPACE}/beta
+    run: |
+      set -eu
+      printf 'beta\n' > result.txt
+      printf 'worker=%s cwd=%s\n' "$(hostname)" "$PWD"
+      sleep 2
+  - id: join
+    depends: [alpha, beta]
+    working_dir: ${env.WORKSPACE}
+    run: |
+      set -eu
+      test "$(cat alpha/result.txt)" = alpha
+      test "$(cat beta/result.txt)" = beta
+      cat alpha/result.txt beta/result.txt > combined.txt
+      cat combined.txt

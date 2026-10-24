@@ -4,6 +4,7 @@
 
 ```sh
 make check
+make test-recipe
 make test-scale
 make test-lifecycle
 git diff --check
@@ -12,12 +13,13 @@ git diff --check
 The expected results are:
 
 - Ruff lint and formatting checks pass; Prettier reports no formatting changes.
-- Seven tooling tests pass against actual local HTTP requests and validated argument boundaries.
-- Six workflow files pass the pinned `dagu validate` command.
+- Eleven tooling tests pass against actual local HTTP requests, download-integrity checks, recipe adaptation, and validated argument boundaries.
+- Six checked-in workflow files, plus the optional generated recipe, pass the pinned `dagu validate` command.
 - The default demo completes eight successful DAG runs across two workers and the local server.
 - The negative acceptance checks confirm a failed missing-file step, an unstarted dependent step, a rejected invalid step ID, and an HTTP 404 for an unknown workflow.
 - Scaling to one and three workers permits successful distributed runs and returns to the original worker count.
 - Recreating the stack retains eight successful run records, their worker provenance, returned worker logs, and a server log after the worker containers are gone.
+- The upstream recipe refreshes before use, replaces a stale deployment, executes successfully on a worker, preserves its three-retry failure policy, and rejects invalid deployment content. See [recipe verification](/docs/recipes.md#verification).
 
 The intentional `expected-failure` DAG is expected to be red in the dashboard. The acceptance command itself must exit zero only after checking that behavior.
 

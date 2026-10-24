@@ -4,6 +4,8 @@
 
 The repository is split into deployment (`compose.yaml`), user commands (`Makefile`), examples (`dags/`), acceptance tooling (`scripts/` and `tests/`), and explanation (`docs/`). There is no installable application or custom worker build. Each workflow demonstrates one concept; the demo brings those concepts together.
 
+The optional official recipe follows the same deployment model: host-side tooling downloads a checksum-pinned upstream definition, validates a small health-only adaptation, and atomically writes an ignored DAG file into the existing mount. Dagu dispatches it as an ordinary workflow. No recipe body is vendored and no nested engine process is needed; see [recipes](/docs/recipes.md).
+
 ## Control plane and execution plane
 
 The server runs `dagu start-all`: dashboard, scheduler, and coordinator. It owns the workflow definitions, persistent run history, logs, and Wiki. Its only public listener is mapped to `127.0.0.1:8100` by default.

@@ -1,7 +1,7 @@
 name: dagu-playground
 
 x-dagu: &dagu
-  image: ghcr.io/dagucloud/dagu:2.22.2@sha256:35897f82f61375365a27914b63af08a7dfcf56320c7bc9df813a0bd966b953f1
+  image: ghcr.io/dagucloud/dagu:2.27.0@sha256:399dda807f532df9e17bcea6fa836b79f5700c3c13ca2f62fc0c1e45cab8e286
   restart: unless-stopped
 
 services:
